@@ -1,6 +1,11 @@
 u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "utils.lua")
 
--- Tests whether a number is equal to any number within an array
+-- Constants
+THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
+FOCUSRATIO = 0.625		-- The percentage by which the player shrinks when focused
+
+
+-- Tests whether a number is equal to any number within a table
 function equalsWithin(num, arr)
 	for i = 1, #arr do
 		if num == arr[i] then return true end
@@ -9,22 +14,22 @@ function equalsWithin(num, arr)
 end
 
 -- Takes a coordinate, translates it by dX and dY, and returns the new coordinates
-function transformTranslate(dX, dY, ...)
-	local c = {...}
-	return c[1] + dX, c[2] + dY
+function transformTranslate(dX, dY, x, y)
+	return x + dX, y + dY
 end
 
 -- Takes a coordinate, rotates it by R radians about the origin, and returns the new coordinates
-function transformRotation(R, ...)
-	local c = {...}
-	return c[1] * math.cos(R) - c[2] * math.sin(R), c[1] * math.sin(R) + c[2] * math.cos(R)
+function transformRotation(R, x, y)
+	return x * math.cos(R) - y * math.sin(R), x * math.sin(R) + y * math.cos(R)
 end
 
 -- Takes a coordinate, scales it by sX or sY across the x or y axis respectively, and returns the new coordinates
-function transformScale(sX, sY, ...)
-	local c = {...}
-	return c[1] * sY, c[2] * sX
+function transformScale(sX, sY, x, y)
+	return x * sY, x * sX
 end
+
+-- Transformation functions can be chained
+-- Ex: transformTranslate(20, 10, transformRotation(math.pi, x, y))
 
 -- Sets hue to a specific value by setting its min an max to the same value
 function s_setHue(h)
@@ -32,7 +37,7 @@ function s_setHue(h)
 	s_setHueMax(h)
 end
 
--- Sets pilse to a specific value by setting its min an max to the same value
+-- Sets pulse to a specific value by setting its min an max to the same value
 function s_setPulse(p)
 	s_setPulseMin(p)
 	s_setPulseMax(p)
@@ -61,4 +66,65 @@ end
 -- Takes a value <i> between <a> and <b> and proportionally maps it to a value between <c> and <d>
 function map(i, a, b, c, d)
 	return lerp(c, d, inverseLerp(a, b, i))
+end
+
+-- Guarantees an input value to be a valid number of sides. Falls back to the level's current number of sides if an invalid argument is given
+function verifyShape(shape)
+	return type(shape) == 'number' and math.floor(math.max(shape, 3)) or l_getSides()
+end
+
+local __fromHSV = fromHSV
+
+-- fromHSV with type checking
+function fromHSV(h, s, v)
+	return __fromHSV(type(h) == 'number' and h or 0, type(s) == 'number' and clamp(s, 0, 1) or 1, type(v) == 'number' and clamp(v, 0, 1) or 1)
+end
+
+-- Distance from the center to the player position
+function getPlayerRadius()
+	return l_getRadiusMin() * l_getPulse() / l_getPulseMin() + l_getBeatPulse()
+end
+-- Distance from center to tip of player arrow
+function getPlayerTipRadius()
+	return getPlayerRadius() + 7.25
+end
+
+-- Distance from center to base of player arrow (depends on focus)
+function getPlayerBaseRadius(mFocus)
+	return getPlayerRadius() - (mFocus and 1.265625 or 2.025)
+end
+
+-- Distance from the base to the tip of the player triangle (depends on focus)
+function getPlayerHeight(mFocus)
+	return 7.25 + (mFocus and 1.265625 or 2.025)
+end
+
+-- Half of the base width of the player triangle (depends on focus)
+function getPlayerHalfBaseWidth(mFocus)
+	return mFocus and 11.5 or 7.1875
+end
+
+-- Base width of the player triangle (depends on focus)
+function getPlayerBaseWidth(mFocus)
+	return mFocus and 23 or 14.375
+end
+
+-- Radius of a circle circumscribed around the center polygon cap
+function getCapRadius()
+	return getPlayerRadius() * 0.75
+end
+
+-- Width of the polygon border
+function getPolygonBorderWidth()
+	return 5
+end
+
+-- Radius of a circle circumscribed around the center polygon
+function getPolygonRadius()
+	return getCapRadius() + getPolygonBorderWidth()
+end
+
+-- Returns the speed of walls in units per frame (5 times the speed mult)
+function getWallSpeed()
+	return l_getSpeedMult() * 5
 end
