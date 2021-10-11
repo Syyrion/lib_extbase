@@ -5,6 +5,17 @@ THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
 FOCUSRATIO = 0.625		-- The percentage by which the player shrinks when focused
 
 
+function math.fastsin_taylor(x)
+	x = (x - math.pi) % math.tau - math.pi
+	return x - x ^ 3 / 6 + x ^ 5 / 120 - x ^ 7 / 5040 + x ^ 9 / 362880
+end
+
+function math.fastcos_taylor(x)
+	x = (x - math.pi) % math.tau - math.pi
+	return 1 - x ^ 2 / 2 + x ^ 4 / 24 - x ^ 6 / 720 + x ^ 8 / 40320
+end
+
+
 -- Tests whether a number is equal to any number within a table
 function equalsWithin(num, arr)
 	for i = 1, #arr do
