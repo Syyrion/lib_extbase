@@ -55,27 +55,27 @@ function s_setPulse(p)
 end
 
 -- Sign function
-function sgn(x)
+function math.sgn(x)
 	return x > 0 and 1 or x == 0 and 0 or -1
 end
 
 -- Square wave function with period p at value x with duty cycle d (range [-1, 1])
-function square(x, p, d)
+function math.square(x, p, d)
 	return sgn(math.sin(math.pi * (2 * x / p + 0.5 - d)) - math.cos(math.pi * d))
 end
 
 -- Triangle wave function with period p at value x (range [-1, 1])
-function triangle(x, p)
+function math.triangle(x, p)
 	return math.asin(math.sin(math.tau * x / p)) * 2 / math.pi
 end
 
 -- Sawtooth wave function with period p at value x (range [-1, 1])
-function sawtooth(x, p)
+function math.sawtooth(x, p)
 	return 2 * (x / p - math.floor(0.5 + x / p))
 end
 
 -- Takes a value <i> between <a> and <b> and proportionally maps it to a value between <c> and <d>
-function map(i, a, b, c, d)
+function math.map(i, a, b, c, d)
 	return lerp(c, d, inverseLerp(a, b, i))
 end
 
