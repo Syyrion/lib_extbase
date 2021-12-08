@@ -111,5 +111,5 @@ end
 
 -- Returns the speed of walls in units per frame (5 times the speed mult)
 function getWallSpeedInUnitsPerFrame()
-    return l_getSpeedMult() * (u_getDifficultyMult() ^ 0.65) * 5
+    return u_getSpeedMultDM() * (u_getDifficultyMult() ^ 0.65) * 5
 end
