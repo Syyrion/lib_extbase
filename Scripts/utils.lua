@@ -1,3 +1,6 @@
+if __EXTBASE_UTILS_IMPORTED then return end
+__EXTBASE_UTILS_IMPORTED = true
+
 u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "utils.lua")
 
 -- Constants
