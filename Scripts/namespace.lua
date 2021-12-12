@@ -51,5 +51,3 @@ Event = {
 		clear = e_clearMessages
 	}, {__call = function (_, message, duration) e_messageAdd(message, duration) end})
 }
-
-Level = setmetatable({}, {})
