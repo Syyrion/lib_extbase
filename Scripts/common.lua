@@ -1,6 +1,3 @@
-if __EXTBASE_COMMON_IMPORTED then return end
-__EXTBASE_COMMON_IMPORTED = true
-
 u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "common.lua")
 
 -- cWall: creates a wall with the common THICKNESS or mThickness (optional)

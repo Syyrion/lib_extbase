@@ -1,6 +1,3 @@
-if __EXTBASE_ALTERNATIVE_PATTERNS_IMPORTED then return end
-__EXTBASE_ALTERNATIVE_PATTERNS_IMPORTED = true
-
 u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "alternativepatterns.lua")
 u_execScript("common.lua")
 
