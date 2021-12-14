@@ -5,7 +5,10 @@ THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
 FOCUS_RATIO = 0.625		-- The percentage by which the player shrinks when focused
 PLAYER_WIDTH_UNFOCUSED = 23
 PLAYER_WIDTH_FOCUSED = PLAYER_WIDTH_UNFOCUSED * FOCUS_RATIO
-
+PLAYER_TIP_DISTANCE_OFFSET = 7.3
+PLAYER_BASE_DISTANCE_OFFSET = -2.025
+PIVOT_RADIUS_TO_PLAYER_DISTANCE_RATIO = 0.75
+PIVOT_BORDER_WIDTH = 5
 
 -- Tests whether a table contains a specific value on any existing key
 function tableContainsValue(val, table)
@@ -33,19 +36,25 @@ function forceSetPulse(p)
     s_setPulseMax(p)
 end
 
--- Square wave function with period p at value x with duty cycle d (range [-1, 1])
-function squareWave(x, p, d)
-	return getSign(math.sin(math.pi * (2 * x / p + 0.5 - d)) - math.cos(math.pi * d))
+-- Square wave function with period 1 and amplitude 1 at value <x> with duty cycle <d>
+function squareWave(x, d)
+	return -getSign(x % 1 - clamp(d, 0, 1))
 end
 
--- Triangle wave function with period p at value x (range [-1, 1])
-function triangleWave(x, p)
-	return math.asin(math.sin(math.tau * x / p)) * 2 / math.pi
+-- Asymmetrical triangle wave function with period 1 and amplitude 1 at value <x>
+-- Asymmetry can be adjusted with <d>
+-- An asymmetry of 1 is equivalent to sawtooth wave
+-- An asymmetry of 0 is equivalent to a reversed sawtooth wave
+function triangleWave(x, d)
+    x = x % 1
+    d = clamp(d, 0, 1)
+    local p, x2 = 1 - d, 2 * x
+    return (x < 0.5 * d) and (x2 / d) or (0.5 * (1 + p) <= x) and ((x2 - 2) / d) or ((1 - x2) / p)
 end
 
--- Sawtooth wave function with period p at value x (range [-1, 1])
-function sawtoothWave(x, p)
-	return 2 * (x / p - math.floor(0.5 + x / p))
+-- Sawtooth wave function with period 1 and amplitude 1 at value x
+function sawtoothWave(x)
+	return 2 * (x - math.floor(0.5 + x))
 end
 
 -- Takes a value <i> between <a> and <b> and proportionally maps it to a value between <c> and <d>
@@ -71,17 +80,17 @@ function getDistanceBetweenCenterAndPlayer()
 end
 -- Distance from center to tip of player arrow
 function getDistanceBetweenCenterAndPlayerTip()
-    return getDistanceBetweenCenterAndPlayer() + 7.25
+    return getDistanceBetweenCenterAndPlayer() + PLAYER_TIP_DISTANCE_OFFSET
 end
 
 -- Distance from center to base of player arrow (depends on focus)
 function getDistanceBetweenCenterAndPlayerBase(mFocus)
-    return getDistanceBetweenCenterAndPlayer() - 2.025 * (mFocus and FOCUS_RATIO or 1)
+    return getDistanceBetweenCenterAndPlayer() + PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_RATIO or 1)
 end
 
 -- Distance from the base to the tip of the player triangle (depends on focus)
 function getPlayerHeight(mFocus)
-    return 7.25 + 2.025 * (mFocus and FOCUS_RATIO or 1)
+    return PLAYER_TIP_DISTANCE_OFFSET - PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_RATIO or 1)
 end
 
 -- Base width of the player triangle (depends on focus)
@@ -96,17 +105,12 @@ end
 
 -- Radius of a circle circumscribed around the center polygon cap
 function getCapRadius()
-    return getDistanceBetweenCenterAndPlayer() * 0.75
-end
-
--- Width of the polygon border
-function getPivotBorderWidth()
-    return 5
+    return getDistanceBetweenCenterAndPlayer() * PIVOT_RADIUS_TO_PLAYER_DISTANCE_RATIO
 end
 
 -- Radius of a circle circumscribed around the center polygon
 function getPivotRadius()
-    return getCapRadius() + getPivotBorderWidth()
+    return getCapRadius() + PIVOT_BORDER_WIDTH
 end
 
 -- Returns the speed of walls in units per frame (5 times the speed mult)
