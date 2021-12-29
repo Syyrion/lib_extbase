@@ -10,6 +10,15 @@ PLAYER_BASE_DISTANCE_OFFSET = -2.025
 PIVOT_RADIUS_TO_PLAYER_DISTANCE_RATIO = 0.75
 PIVOT_BORDER_WIDTH = 5
 
+function string.split(inputstr, sep)
+    sep = sep or "%s"
+    local t = {}
+    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+            table.insert(t, str)
+    end
+    return t
+end
+
 -- Tests whether a table contains a specific value on any existing key
 function tableContainsValue(val, table)
     for _, v in pairs(table) do
