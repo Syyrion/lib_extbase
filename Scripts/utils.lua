@@ -1,13 +1,7 @@
 u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "utils.lua")
 
 --[[
-	* CONSTANTS
-]]
-
-THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
-
---[[
-	* DIMENSIONS
+	* DIMENSION CONSTANTS
 ]]
 FOCUS_RATIO = 0.625		-- The percentage by which the player shrinks when focused
 PLAYER_WIDTH_UNFOCUSED = 23
@@ -18,7 +12,7 @@ PIVOT_RADIUS_TO_PLAYER_DISTANCE_RATIO = 0.75
 PIVOT_BORDER_WIDTH = 5
 
 --[[
-	* TIME
+	* TIME CONSTANTS
 ]]
 FRAMES_PER_SECOND = FPS
 SECONDS_PER_FRAME = 1 / FRAMES_PER_SECOND
@@ -33,34 +27,46 @@ FRAMES_PER_PLAYER_ROTATION = 800 / 21
 TICKS_PER_PLAYER_ROTATION = FRAMES_PER_PLAYER_ROTATION * TICKS_PER_FRAME
 SECONDS_PER_PLAYER_ROTATION = FRAMES_PER_PLAYER_ROTATION * SECONDS_PER_FRAME
 
+--[[
+	* OTHER CONSTANTS
+]]
+THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
+
+
 
 --[[
-	* UTILITY
+	* GENERAL UTILITY
 ]]
 
 -- No operation function
 function nop(...) end
 
-function string.split(s, pattern)
-	local pos, t = 1, {}
-	repeat
-		local i, o = s:find(pattern, pos)
-		i = (i or 0) - 1
-		table.insert(t, s:sub(pos, i))
-		pos = (o or 0) + 1
-	until i == -1
+function string.split(str, pattern)
+	local t, capture = {}, nil
+	while true do
+		local prev = str
+		capture, str = str:match('(.-)' .. pattern .. '(.*)')
+		if not capture or str == prev then
+			table.insert(t, prev)
+			break
+		end
+		table.insert(t, capture)
+	end
 	return t
 end
 
 function string.gsplit(s, pattern)
 	return coroutine.wrap(function ()
-		local pos = 1
-		repeat
-			local i, o = s:find(pattern, pos)
-			i = (i or 0) - 1
-			coroutine.yield(s:sub(pos, i))
-			pos = (o or 0) + 1
-		until i == -1
+		local capture
+		while true do
+			local prev = str
+			capture, str = str:match('(.-)' .. pattern .. '(.*)')
+			if not capture or str == prev then
+				coroutine.yield(prev)
+				break
+			end
+			coroutine.yield(capture)
+		end
 	end)
 end
 
@@ -90,6 +96,29 @@ function forceSetPulse(p)
 	s_setPulseMax(p)
 end
 
+-- Takes a value <i> between <a> and <b> and proportionally maps it to a value between <c> and <d>
+function mapValue(i, a, b, c, d)
+	return c + ((d - c) / (b - a)) * (i - a)
+end
+
+-- Guarantees an input value to be a valid number of sides. Falls back to the level's current number of sides if an invalid argument is given
+function verifyShape(shape)
+	return type(shape) == 'number' and math.floor(math.max(shape, 3)) or l_getSides()
+end
+
+local __fromHSV = fromHSV
+
+-- fromHSV with type checking
+function fromHSV(h, s, v)
+	return __fromHSV(type(h) == 'number' and h or 0, type(s) == 'number' and clamp(s, 0, 1) or 1, type(v) == 'number' and clamp(v, 0, 1) or 1)
+end
+
+
+
+--[[
+	* WAVES
+]]
+
 -- Square wave function with period 1 and amplitude 1 at value <x> with duty cycle <d>
 function squareWave(x, d)
 	return -getSign(x % 1 - clamp(d, 0, 1))
@@ -111,22 +140,11 @@ function sawtoothWave(x)
 	return 2 * (x - math.floor(0.5 + x))
 end
 
--- Takes a value <i> between <a> and <b> and proportionally maps it to a value between <c> and <d>
-function mapValue(i, a, b, c, d)
-	return c + ((d - c) / (b - a)) * (i - a)
-end
 
--- Guarantees an input value to be a valid number of sides. Falls back to the level's current number of sides if an invalid argument is given
-function verifyShape(shape)
-	return type(shape) == 'number' and math.floor(math.max(shape, 3)) or l_getSides()
-end
 
-local __fromHSV = fromHSV
-
--- fromHSV with type checking
-function fromHSV(h, s, v)
-	return __fromHSV(type(h) == 'number' and h or 0, type(s) == 'number' and clamp(s, 0, 1) or 1, type(v) == 'number' and clamp(v, 0, 1) or 1)
-end
+--[[
+	* DIMENSIONS
+]]
 
 -- Distance from the center to the player position
 function getDistanceBetweenCenterAndPlayer()
@@ -167,7 +185,56 @@ function getPivotRadius()
 	return getCapRadius() + PIVOT_BORDER_WIDTH
 end
 
+
+
+--[[
+	* THICKNESS AND DELAYS
+]]
+
 -- Returns the speed of walls in units per frame (5 times the speed mult)
 function getWallSpeedInUnitsPerFrame()
 	return u_getSpeedMultDM() * 5
+end
+
+-- Returns the amount of frames/ticks/seconds it takes for a certain thickness of wall to travel one full length of itself
+function thicknessToFrames(th)
+	return th / getWallSpeedInUnitsPerFrame()
+end
+
+function thicknessToTicks(th)
+	return thicknessToFrames(th) * TICKS_PER_FRAME
+end
+
+function thicknessToSeconds(th)
+	return thicknessToFrames(th) * SECONDS_PER_FRAME
+end
+
+-- Inverse of the above functions
+function framesToThickness(frames)
+	return getWallSpeedInUnitsPerFrame() * frames
+end
+
+function ticksToThickness(ticks)
+	return framesToThickness(ticks * FRAMES_PER_TICK)
+end
+
+function secondsToThickness(seconds)
+	return framesToThickness(seconds * FRAMES_PER_SECOND)
+end
+
+-- Returns the amount of time in frames/ticks/seconds for the player travel across one side.
+function getIdealDelayInTicks(sides)
+	return TICKS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult() / (sides or l_getSides())
+end
+
+function getIdealDelayInFrames(sides)
+	return FRAMES_PER_PLAYER_ROTATION * l_getPlayerSpeedMult() / (sides or l_getSides())
+end
+
+function getIdealDelayInSeconds(sides)
+	return SECONDS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult() / (sides or l_getSides())
+end
+
+function getIdealThickness(sides)
+	return ticksToThickness(getIdealDelayInTicks(sides))
 end
