@@ -55,12 +55,13 @@ function string.split(str, pattern)
 	return t
 end
 
-function string.gsplit(s, pattern)
+function string.gsplit(str, pattern)
 	return coroutine.wrap(function ()
 		local capture
+		pattern = '(.-)' .. pattern .. '(.*)'
 		while true do
 			local prev = str
-			capture, str = str:match('(.-)' .. pattern .. '(.*)')
+			capture, str = str:match(pattern)
 			if not capture or str == prev then
 				coroutine.yield(prev)
 				break
