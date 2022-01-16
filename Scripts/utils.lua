@@ -1,3 +1,26 @@
+--[[
+	Utility functions/constants for Open Hexagon.
+	https://github.com/vittorioromeo/SSVOpenHexagon
+
+	Copyright (C) 2021 Ricky Cui
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+	Email: cuiricky4@gmail.com
+	GitHub: https://github.com/Syyrion
+]]
+
 u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "utils.lua")
 
 --[[
@@ -41,6 +64,7 @@ THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
 -- No operation function
 function nop(...) end
 
+-- Returns a table of strings derived from splitting <str> with <pattern>.
 function string.split(str, pattern)
 	local t, capture = {}, nil
 	while true do
@@ -55,6 +79,7 @@ function string.split(str, pattern)
 	return t
 end
 
+-- Returns an iterator function that iterates over all split strings.
 function string.gsplit(str, pattern)
 	return coroutine.wrap(function ()
 		local capture
@@ -69,6 +94,11 @@ function string.gsplit(str, pattern)
 			coroutine.yield(capture)
 		end
 	end)
+end
+
+-- Formatted error
+function errorf(level, label, message, ...)
+	error(('[%sError] '):format(label) .. message:format(...), level + 1)
 end
 
 -- Tests whether a table contains a specific value on any existing key
@@ -238,4 +268,39 @@ end
 
 function getIdealThickness(sides)
 	return ticksToThickness(getIdealDelayInTicks(sides))
+end
+
+--[[
+	* CLASSES
+]]
+
+Discrete = {
+	form = 'nil'
+}
+Discrete.__index = Discrete
+function Discrete:new(init, def, form)
+	local newInst = setmetatable({}, self)
+	newInst.__index = newInst
+	newInst.form = form
+	newInst:set(init)
+	newInst:define(def)
+	return newInst
+end
+
+-- Sets a value. If verification fails, the value is removed
+function Discrete:set(val) self.val = type(val) == self.form and val or nil end
+function Discrete:get() return self.val end
+-- Defines a value's get function
+function Discrete:define(fn) self.get = type(fn) == "function" and fn or nil end
+-- Gets a value without searching for a default value
+function Discrete:rawget() return rawget(self, 'val') end
+-- Sets a value to its default
+function Discrete:freeze()
+	self.val = nil
+	self.val = self:get()
+end
+
+-- Function to prevent creating new classes from already existing instances.
+function __NEW_CLASS_ERROR()
+	error('[NewClassError] Cannot create a new class from already existing instance.', 3)
 end
