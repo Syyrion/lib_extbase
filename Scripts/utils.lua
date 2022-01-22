@@ -301,6 +301,6 @@ function Discrete:freeze()
 end
 
 -- Function to prevent creating new classes from already existing instances.
-function __NEW_CLASS_ERROR()
-	error('[NewClassError] Cannot create a new class from already existing instance.', 3)
+function NewClassError()
+	error('[NewClassError] Cannot create a new class from already existing instance.', 2)
 end
