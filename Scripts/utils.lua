@@ -270,6 +270,22 @@ function getIdealThickness(sides)
 	return ticksToThickness(getIdealDelayInTicks(sides))
 end
 
+function createSolidPolygonConstructor(sides, fn)
+	sides, fn = verifyShape(sides), type(fn) == "function" and fn or cw_createNoCollision
+	local arc, limit, t = math.tau / sides, math.floor(sides / 2), {}
+	local a, b = 0, sides - 1
+	local aa, ba = 0, b * arc
+	repeat
+		local key = fn()
+		t[key] = {[0] = ba, [1] = aa}
+		a, b = a + 1, b - 1
+		aa, ba = a * arc, b * arc
+		t[key][2] = aa
+		t[key][3] = ba
+	until b == limit
+	return t
+end
+
 --[[
 	* CLASSES
 ]]
@@ -278,6 +294,7 @@ Discrete = {
 	form = 'nil'
 }
 Discrete.__index = Discrete
+
 function Discrete:new(init, def, form)
 	local newInst = setmetatable({}, self)
 	newInst.__index = newInst
@@ -301,6 +318,6 @@ function Discrete:freeze()
 end
 
 -- Function to prevent creating new classes from already existing instances.
-function NewClassError()
+function __NEW_CLASS_ERROR()
 	error('[NewClassError] Cannot create a new class from already existing instance.', 2)
 end
