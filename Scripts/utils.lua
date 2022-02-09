@@ -43,7 +43,7 @@ SECONDS_PER_FRAME = 1 / FRAMES_PER_SECOND
 TICKS_PER_FRAME = 4
 FRAMES_PER_TICK = 1 / TICKS_PER_FRAME
 
-TICKS_PER_SECOND = FRAMES_PER_SECOND * 4
+TICKS_PER_SECOND = FRAMES_PER_SECOND * TICKS_PER_FRAME
 SECONDS_PER_TICK = 1 / TICKS_PER_SECOND
 
 FRAMES_PER_PLAYER_ROTATION = 800 / 21
@@ -62,7 +62,7 @@ THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
 ]]
 
 -- No operation function
-function nop(...) end
+function __NOP(...) end
 
 -- Returns a table of strings derived from splitting <str> with <pattern>.
 function string.split(str, pattern)
@@ -290,6 +290,10 @@ end
 	* CLASSES
 ]]
 
+-- Function to prevent creating new classes from already existing instances.
+function __NEW_CLASS_ERROR()
+	error('[NewClassError] Cannot create a new class from already existing instance.', 2)
+end
 Discrete = {
 	form = 'nil'
 }
@@ -315,9 +319,4 @@ function Discrete:rawget() return rawget(self, 'val') end
 function Discrete:freeze()
 	self.val = nil
 	self.val = self:get()
-end
-
--- Function to prevent creating new classes from already existing instances.
-function __NEW_CLASS_ERROR()
-	error('[NewClassError] Cannot create a new class from already existing instance.', 2)
 end
