@@ -308,15 +308,48 @@ function Discrete:new(init, def, form)
 	return newInst
 end
 
--- Sets a value. If verification fails, the value is removed
+-- Sets a value. If verification fails, the value is removed.
 function Discrete:set(val) self.val = type(val) == self.form and val or nil end
+-- Gets a value.
 function Discrete:get() return self.val end
--- Defines a value's get function
+-- Modifies the behavior of the get function.
 function Discrete:define(fn) self.get = type(fn) == "function" and fn or nil end
--- Gets a value without searching for a default value
+-- Gets a value without searching for a default value.
 function Discrete:rawget() return rawget(self, 'val') end
--- Sets a value to its default
+-- Sets a value to its default.
 function Discrete:freeze()
 	self.val = nil
 	self.val = self:get()
+end
+
+Incrementer = {
+	value = 0
+}
+Incrementer.__index = Incrementer
+
+function Incrementer:new(start, target, steps)
+	local newInst = setmetatable({
+		start = type(start) == 'number' and start or error('Argument #1 is not a number', 2),
+		target = type(target) == 'number' and target or error('Argument #2 is not a number', 2),
+		progress = 0,
+		limit = type(steps) == 'number' and math.floor(steps) or error('Argument #3 is not a number', 2)
+	}, self)
+	newInst:increment()
+	return newInst
+end
+
+function Incrementer:restart()
+	self.progress = 0
+	self:increment()
+end
+
+function Incrementer:increment()
+	if self.progress > self.limit then return self.value end
+	self.value = mapValue(self.progress, 0, self.limit, self.start, self.target)
+	self.progress = self.progress + 1
+	return self.value
+end
+
+function Incrementer:get()
+	return self.value
 end
