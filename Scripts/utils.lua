@@ -62,7 +62,7 @@ THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
 ]]
 
 -- No operation function
-function __NOP(...) end
+function __NOP(...) return ... end
 
 -- Returns a table of strings derived from splitting <str> with <pattern>.
 function string.split(str, pattern)
