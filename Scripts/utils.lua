@@ -26,9 +26,9 @@ u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "utils.lua")
 --[[
 	* DIMENSION CONSTANTS
 ]]
-FOCUS_RATIO = 0.625		-- The percentage by which the player shrinks when focused
+FOCUS_FACTOR = 0.625
 PLAYER_WIDTH_UNFOCUSED = 23
-PLAYER_WIDTH_FOCUSED = PLAYER_WIDTH_UNFOCUSED * FOCUS_RATIO
+PLAYER_WIDTH_FOCUSED = PLAYER_WIDTH_UNFOCUSED * FOCUS_FACTOR
 PLAYER_TIP_DISTANCE_OFFSET = 7.3
 PLAYER_BASE_DISTANCE_OFFSET = -2.025
 PIVOT_RADIUS_TO_PLAYER_DISTANCE_RATIO = 0.75
@@ -188,12 +188,12 @@ end
 
 -- Distance from center to base of player arrow (depends on focus)
 function getDistanceBetweenCenterAndPlayerBase(mFocus)
-	return getDistanceBetweenCenterAndPlayer() + PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_RATIO or 1)
+	return getDistanceBetweenCenterAndPlayer() + PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_FACTOR or 1)
 end
 
 -- Distance from the base to the tip of the player triangle (depends on focus)
 function getPlayerHeight(mFocus)
-	return PLAYER_TIP_DISTANCE_OFFSET - PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_RATIO or 1)
+	return PLAYER_TIP_DISTANCE_OFFSET - PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_FACTOR or 1)
 end
 
 -- Base width of the player triangle (depends on focus)
