@@ -26,9 +26,9 @@ u_execDependencyScript("ohvrvanilla", "base", "vittorio romeo", "utils.lua")
 --[[
 	* DIMENSION CONSTANTS
 ]]
-FOCUS_FACTOR = 0.625
+FOCUS_RATIO = 0.625
 PLAYER_WIDTH_UNFOCUSED = 23
-PLAYER_WIDTH_FOCUSED = PLAYER_WIDTH_UNFOCUSED * FOCUS_FACTOR
+PLAYER_WIDTH_FOCUSED = PLAYER_WIDTH_UNFOCUSED * FOCUS_RATIO
 PLAYER_TIP_DISTANCE_OFFSET = 7.3
 PLAYER_BASE_DISTANCE_OFFSET = -2.025
 PIVOT_RADIUS_TO_PLAYER_DISTANCE_RATIO = 0.75
@@ -46,6 +46,7 @@ FRAMES_PER_TICK = 1 / TICKS_PER_FRAME
 TICKS_PER_SECOND = FRAMES_PER_SECOND * TICKS_PER_FRAME
 SECONDS_PER_TICK = 1 / TICKS_PER_SECOND
 
+-- These assume a player speed multiplier of 1
 FRAMES_PER_PLAYER_ROTATION = 800 / 21
 TICKS_PER_PLAYER_ROTATION = FRAMES_PER_PLAYER_ROTATION * TICKS_PER_FRAME
 SECONDS_PER_PLAYER_ROTATION = FRAMES_PER_PLAYER_ROTATION * SECONDS_PER_FRAME
@@ -188,12 +189,12 @@ end
 
 -- Distance from center to base of player arrow (depends on focus)
 function getDistanceBetweenCenterAndPlayerBase(mFocus)
-	return getDistanceBetweenCenterAndPlayer() + PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_FACTOR or 1)
+	return getDistanceBetweenCenterAndPlayer() + PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_RATIO or 1)
 end
 
 -- Distance from the base to the tip of the player triangle (depends on focus)
 function getPlayerHeight(mFocus)
-	return PLAYER_TIP_DISTANCE_OFFSET - PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_FACTOR or 1)
+	return PLAYER_TIP_DISTANCE_OFFSET - PLAYER_BASE_DISTANCE_OFFSET * (mFocus and FOCUS_RATIO or 1)
 end
 
 -- Base width of the player triangle (depends on focus)
@@ -253,17 +254,30 @@ function secondsToThickness(seconds)
 	return framesToThickness(seconds * FRAMES_PER_SECOND)
 end
 
+-- Returns the amount of time in frames/ticks/seconds for the player make one full revolution adjusted for the player speed multiplier.
+function getTicksPerPlayerRotation()
+	return TICKS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult()
+end
+
+function getFramesPerPlayerRotation()
+	return FRAMES_PER_PLAYER_ROTATION * l_getPlayerSpeedMult()
+end
+
+function getSecondsPerPlayerRotation()
+	return SECONDS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult()
+end
+
 -- Returns the amount of time in frames/ticks/seconds for the player travel across one side.
 function getIdealDelayInTicks(sides)
-	return TICKS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult() / (sides or l_getSides())
+	return getTicksPerPlayerRotation() / (sides or l_getSides())
 end
 
 function getIdealDelayInFrames(sides)
-	return FRAMES_PER_PLAYER_ROTATION * l_getPlayerSpeedMult() / (sides or l_getSides())
+	return getFramesPerPlayerRotation() / (sides or l_getSides())
 end
 
 function getIdealDelayInSeconds(sides)
-	return SECONDS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult() / (sides or l_getSides())
+	return getSecondsPerPlayerRotation() / (sides or l_getSides())
 end
 
 function getIdealThickness(sides)
