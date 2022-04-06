@@ -78,27 +78,27 @@ function __FALSE(...) return false end
 Filter = {}
 
 -- Types
-Filter.IS_NIL = function (val) return type(val) == 'nil' end
-Filter.IS_NUMBER = function (val) return type(val) == 'number' end
-Filter.IS_STRING = function (val) return type(val) == 'string' end
-Filter.IS_BOOLEAN = function (val) return type(val) == 'boolean' end
-Filter.IS_TABLE = function (val) return type(val) == 'table' end
-Filter.IS_FUNCTION = function (val) return type(val) == 'function' end
-Filter.IS_THREAD = function (val) return type(val) == 'thread' end
-Filter.IS_USERDATA = function (val) return type(val) == 'userdata' end
+Filter.NIL = function (val) return type(val) == 'nil' end
+Filter.NUMBER = function (val) return type(val) == 'number' end
+Filter.STRING = function (val) return type(val) == 'string' end
+Filter.BOOLEAN = function (val) return type(val) == 'boolean' end
+Filter.TABLE = function (val) return type(val) == 'table' end
+Filter.FUNCTION = function (val) return type(val) == 'function' end
+Filter.THREAD = function (val) return type(val) == 'thread' end
+Filter.USERDATA = function (val) return type(val) == 'userdata' end
 
 -- Numeric filters
-Filter.IS_POSITIVE = function (val) return Filter.IS_NUMBER(val) and val > 0 end
-Filter.IS_NON_NEGATIVE = function (val) return Filter.IS_NUMBER(val) and val >= 0 end
-Filter.IS_NEGATIVE = function (val) return Filter.IS_NUMBER(val) and val < 0 end
-Filter.IS_NON_POSITIVE = function (val) return Filter.IS_NUMBER(val) and val <= 0 end
-Filter.IS_NON_ZERO = function (val) return Filter.IS_NUMBER(val) and val ~= 0 end
+Filter.POSITIVE = function (val) return Filter.NUMBER(val) and val > 0 end
+Filter.NON_NEGATIVE = function (val) return Filter.NUMBER(val) and val >= 0 end
+Filter.NEGATIVE = function (val) return Filter.NUMBER(val) and val < 0 end
+Filter.NON_POSITIVE = function (val) return Filter.NUMBER(val) and val <= 0 end
+Filter.NON_ZERO = function (val) return Filter.NUMBER(val) and val ~= 0 end
 
-Filter.IS_INTEGER = function (val) return Filter.IS_NUMBER(val) and val % 1 == 0 end
-Filter.IS_NON_ZERO_INTEGER = function (val) return Filter.IS_INTEGER(val) and val ~= 0 end
-Filter.IS_WHOLE = function (val) return Filter.IS_INTEGER(val) and val >= 0 end
-Filter.IS_NATURAL = function (val) return Filter.IS_INTEGER(val) and val > 0 end
-Filter.IS_SIDE_COUNT = function (val) return Filter.IS_INTEGER(val) and val >= 3 end
+Filter.INTEGER = function (val) return Filter.NUMBER(val) and val % 1 == 0 end
+Filter.NON_ZERO_INTEGER = function (val) return Filter.INTEGER(val) and val ~= 0 end
+Filter.WHOLE = function (val) return Filter.INTEGER(val) and val >= 0 end
+Filter.NATURAL = function (val) return Filter.INTEGER(val) and val > 0 end
+Filter.SIDE_COUNT = function (val) return Filter.INTEGER(val) and val >= 3 end
 
 -- Returns a table of strings derived from splitting <str> with <pattern>.
 function string.split(str, pattern)
@@ -169,7 +169,7 @@ function mapValue(i, a, b, c, d)
 end
 
 -- Guarantees an input value to be a valid number of sides. Falls back to the level's current number of sides if an invalid argument is given
--- ! Depreciated. Use the function Filter.IS_SIDE_COUNT
+-- ! Depreciated. Use the function Filter.SIDE_COUNT
 function verifyShape(shape)
 	return type(shape) == 'number' and math.floor(math.max(shape, 3)) or l_getSides()
 end
@@ -326,7 +326,7 @@ function getIdealThickness(sides)
 end
 
 function createSolidPolygonConstructor(sides, fn)
-	sides, fn = Filter.IS_SIDE_COUNT(sides) and sides or errorf(2, 'CreatePolygonConstructor', 'Invalid side count.'), type(fn) == "function" and fn or cw_createNoCollision
+	sides, fn = Filter.SIDE_COUNT(sides) and sides or errorf(2, 'CreatePolygonConstructor', 'Invalid side count.'), type(fn) == "function" and fn or cw_createNoCollision
 	local arc, limit, t = math.tau / sides, math.floor(sides / 2), {}
 	local a, b = 0, sides - 1
 	local aa, ba = 0, b * arc
@@ -379,10 +379,10 @@ Incrementer.__index = Incrementer
 function Incrementer:new(start, target, steps)
 	local newInst = setmetatable({
 		new = __NIL,
-		start = Filter.IS_NUMBER(start) and start or error('Argument #1 is not a number', 2),
-		target = Filter.IS_NUMBER(target) and target or error('Argument #2 is not a number', 2),
+		start = Filter.NUMBER(start) and start or error('Argument #1 is not a number', 2),
+		target = Filter.NUMBER(target) and target or error('Argument #2 is not a number', 2),
 		progress = 0,
-		limit = Filter.IS_WHOLE(steps) and steps or error('Argument #3 is not an integer', 2)
+		limit = Filter.WHOLE(steps) and steps or error('Argument #3 is not an integer', 2)
 	}, self)
 	newInst:increment()
 	return newInst
