@@ -65,6 +65,37 @@ THICKNESS = 40			-- Wall thickness. Sometimes more convenient to define in utils
 -- No operation function
 function __NOP(...) return ... end
 
+-- Similar to __NOP but doesn't return anything
+function __NIL(...) end
+
+-- Function that always returns true
+function __TRUE(...) return true end
+
+-- Function that always returns false
+function __FALSE(...) return false end
+
+-- Common functions for sifting erroneous values
+Filter = {
+	-- Types
+	IS_NIL = function (val) return type(val) == 'nil' end,
+	IS_NUMBER = function (val) return type(val) == 'number' end,
+	IS_STRING = function (val) return type(val) == 'string' end,
+	IS_BOOLEAN = function (val) return type(val) == 'boolean' end,
+	IS_TABLE = function (val) return type(val) == 'table' end,
+	IS_FUNCTION = function (val) return type(val) == 'function' end,
+	IS_THREAD = function (val) return type(val) == 'thread' end,
+	IS_USERDATA = function (val) return type(val) == 'userdata' end,
+
+	-- Numeric filters
+	IS_SIDE_COUNT = function (val) return type(val) == 'number' and val >= 3 and val % 1 == 0 end,
+	IS_POSITIVE = function (val) return type(val) == 'number' and val > 0 end,
+	IS_NOT_NEGATIVE = function (val) return type(val) == 'number' and val >= 0 end,
+	IS_NEGATIVE = function (val) return type(val) == 'number' and val < 0 end,
+	IS_NOT_POSITIVE = function (val) return type(val) == 'number' and val <= 0 end,
+	IS_NOT_ZERO = function (val) return type(val) == 'number' and val ~= 0 end,
+	IS_INTEGER = function (val) return type(val) == 'number' and val % 1 == 0 end
+}
+
 -- Returns a table of strings derived from splitting <str> with <pattern>.
 function string.split(str, pattern)
 	local t, capture = {}, nil
@@ -77,7 +108,7 @@ function string.split(str, pattern)
 		end
 		table.insert(t, capture)
 	end
-	return t
+	return unpack(t)
 end
 
 -- Returns an iterator function that iterates over all split strings.
@@ -134,6 +165,7 @@ function mapValue(i, a, b, c, d)
 end
 
 -- Guarantees an input value to be a valid number of sides. Falls back to the level's current number of sides if an invalid argument is given
+-- ! Depreciated. Use the function Filter.IS_SIDE_COUNT
 function verifyShape(shape)
 	return type(shape) == 'number' and math.floor(math.max(shape, 3)) or l_getSides()
 end
@@ -285,7 +317,7 @@ function getIdealThickness(sides)
 end
 
 function createSolidPolygonConstructor(sides, fn)
-	sides, fn = verifyShape(sides), type(fn) == "function" and fn or cw_createNoCollision
+	sides, fn = Filter.IS_SIDE_COUNT(sides) and sides or errorf(2, 'CreatePolygonConstructor', 'Invalid side count.'), type(fn) == "function" and fn or cw_createNoCollision
 	local arc, limit, t = math.tau / sides, math.floor(sides / 2), {}
 	local a, b = 0, sides - 1
 	local aa, ba = 0, b * arc
@@ -304,30 +336,29 @@ end
 	* CLASSES
 ]]
 
--- Function to prevent creating new classes from already existing instances.
-function __NEW_CLASS_ERROR()
-	error('[NewClassError] Cannot create a new class from already existing instance.', 2)
-end
 Discrete = {
-	form = 'nil'
+	sieve = __FALSE,
 }
 Discrete.__index = Discrete
 
-function Discrete:new(init, def, form)
+function Discrete:new(init, def, filter)
 	local newInst = setmetatable({}, self)
 	newInst.__index = newInst
-	newInst.form = form
+	newInst:filter(filter)
 	newInst:set(init)
 	newInst:define(def)
 	return newInst
 end
 
 -- Sets a value. If verification fails, the value is removed.
-function Discrete:set(val) self.val = type(val) == self.form and val or nil end
+function Discrete:set(val) self.val = self.sieve(val) and val or nil end
 -- Gets a value.
 function Discrete:get() return self.val end
+
+function Discrete:filter(fn) self.sieve = type(fn) == 'function' and fn or nil end
+
 -- Modifies the behavior of the get function.
-function Discrete:define(fn) self.get = type(fn) == "function" and fn or nil end
+function Discrete:define(fn) self.get = type(fn) == 'function' and fn or nil end
 -- Gets a value without searching for a default value.
 function Discrete:rawget() return rawget(self, 'val') end
 -- Sets a value to its default.
@@ -343,6 +374,7 @@ Incrementer.__index = Incrementer
 
 function Incrementer:new(start, target, steps)
 	local newInst = setmetatable({
+		new = __NIL,
 		start = type(start) == 'number' and start or error('Argument #1 is not a number', 2),
 		target = type(target) == 'number' and target or error('Argument #2 is not a number', 2),
 		progress = 0,
