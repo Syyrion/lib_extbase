@@ -75,26 +75,30 @@ function __TRUE(...) return true end
 function __FALSE(...) return false end
 
 -- Common functions for sifting erroneous values
-Filter = {
-	-- Types
-	IS_NIL = function (val) return type(val) == 'nil' end,
-	IS_NUMBER = function (val) return type(val) == 'number' end,
-	IS_STRING = function (val) return type(val) == 'string' end,
-	IS_BOOLEAN = function (val) return type(val) == 'boolean' end,
-	IS_TABLE = function (val) return type(val) == 'table' end,
-	IS_FUNCTION = function (val) return type(val) == 'function' end,
-	IS_THREAD = function (val) return type(val) == 'thread' end,
-	IS_USERDATA = function (val) return type(val) == 'userdata' end,
+Filter = {}
 
-	-- Numeric filters
-	IS_SIDE_COUNT = function (val) return type(val) == 'number' and val >= 3 and val % 1 == 0 end,
-	IS_POSITIVE = function (val) return type(val) == 'number' and val > 0 end,
-	IS_NOT_NEGATIVE = function (val) return type(val) == 'number' and val >= 0 end,
-	IS_NEGATIVE = function (val) return type(val) == 'number' and val < 0 end,
-	IS_NOT_POSITIVE = function (val) return type(val) == 'number' and val <= 0 end,
-	IS_NOT_ZERO = function (val) return type(val) == 'number' and val ~= 0 end,
-	IS_INTEGER = function (val) return type(val) == 'number' and val % 1 == 0 end
-}
+-- Types
+Filter.IS_NIL = function (val) return type(val) == 'nil' end
+Filter.IS_NUMBER = function (val) return type(val) == 'number' end
+Filter.IS_STRING = function (val) return type(val) == 'string' end
+Filter.IS_BOOLEAN = function (val) return type(val) == 'boolean' end
+Filter.IS_TABLE = function (val) return type(val) == 'table' end
+Filter.IS_FUNCTION = function (val) return type(val) == 'function' end
+Filter.IS_THREAD = function (val) return type(val) == 'thread' end
+Filter.IS_USERDATA = function (val) return type(val) == 'userdata' end
+
+-- Numeric filters
+Filter.IS_POSITIVE = function (val) return Filter.IS_NUMBER(val) and val > 0 end
+Filter.IS_NON_NEGATIVE = function (val) return Filter.IS_NUMBER(val) and val >= 0 end
+Filter.IS_NEGATIVE = function (val) return Filter.IS_NUMBER(val) and val < 0 end
+Filter.IS_NON_POSITIVE = function (val) return Filter.IS_NUMBER(val) and val <= 0 end
+Filter.IS_NON_ZERO = function (val) return Filter.IS_NUMBER(val) and val ~= 0 end
+
+Filter.IS_INTEGER = function (val) return Filter.IS_NUMBER(val) and val % 1 == 0 end
+Filter.IS_NON_ZERO_INTEGER = function (val) return Filter.IS_INTEGER(val) and val ~= 0 end
+Filter.IS_WHOLE = function (val) return Filter.IS_INTEGER(val) and val >= 0 end
+Filter.IS_NATURAL = function (val) return Filter.IS_INTEGER(val) and val > 0 end
+Filter.IS_SIDE_COUNT = function (val) return Filter.IS_INTEGER(val) and val >= 3 end
 
 -- Returns a table of strings derived from splitting <str> with <pattern>.
 function string.split(str, pattern)
@@ -182,27 +186,32 @@ end
 --[[
 	* WAVES
 ]]
+Wave = {
+	-- Square wave function with period 1 and amplitude 1 at value <x> with duty cycle <d>
+	square = function (x, d)
+		return -getSign(x % 1 - clamp(d, 0, 1))
+	end,
 
--- Square wave function with period 1 and amplitude 1 at value <x> with duty cycle <d>
-function squareWave(x, d)
-	return -getSign(x % 1 - clamp(d, 0, 1))
-end
+	-- Asymmetrical triangle wave function with period 1 and amplitude 1 at value <x>
+	-- Asymmetry can be adjusted with <d>
+	-- An asymmetry of 1 is equivalent to sawtooth wave
+	-- An asymmetry of 0 is equivalent to a reversed sawtooth wave
+	triangle = function (x, d)
+		x = x % 1
+		d = clamp(d, 0, 1)
+		local p, x2 = 1 - d, 2 * x
+		return (x < 0.5 * d) and (x2 / d) or (0.5 * (1 + p) <= x) and ((x2 - 2) / d) or ((1 - x2) / p)
+	end,
 
--- Asymmetrical triangle wave function with period 1 and amplitude 1 at value <x>
--- Asymmetry can be adjusted with <d>
--- An asymmetry of 1 is equivalent to sawtooth wave
--- An asymmetry of 0 is equivalent to a reversed sawtooth wave
-function triangleWave(x, d)
-	x = x % 1
-	d = clamp(d, 0, 1)
-	local p, x2 = 1 - d, 2 * x
-	return (x < 0.5 * d) and (x2 / d) or (0.5 * (1 + p) <= x) and ((x2 - 2) / d) or ((1 - x2) / p)
-end
-
--- Sawtooth wave function with period 1 and amplitude 1 at value x
-function sawtoothWave(x)
-	return 2 * (x - math.floor(0.5 + x))
-end
+	-- Sawtooth wave function with period 1 and amplitude 1 at value x
+	sawtooth = function (x)
+		return 2 * (x - math.floor(0.5 + x))
+	end
+}
+-- ! Legacy function names
+squareWave = Wave.square
+triangleWave = Wave.triangle
+sawtoothWave = Wave.sawtooth
 
 
 
@@ -336,9 +345,7 @@ end
 	* CLASSES
 ]]
 
-Discrete = {
-	sieve = __FALSE,
-}
+Discrete = {sieve = __FALSE}
 Discrete.__index = Discrete
 
 function Discrete:new(init, def, filter)
@@ -354,9 +361,8 @@ end
 function Discrete:set(val) self.val = self.sieve(val) and val or nil end
 -- Gets a value.
 function Discrete:get() return self.val end
-
+-- Sets the filter.
 function Discrete:filter(fn) self.sieve = type(fn) == 'function' and fn or nil end
-
 -- Modifies the behavior of the get function.
 function Discrete:define(fn) self.get = type(fn) == 'function' and fn or nil end
 -- Gets a value without searching for a default value.
@@ -367,18 +373,16 @@ function Discrete:freeze()
 	self.val = self:get()
 end
 
-Incrementer = {
-	value = 0
-}
+Incrementer = {value = 0}
 Incrementer.__index = Incrementer
 
 function Incrementer:new(start, target, steps)
 	local newInst = setmetatable({
 		new = __NIL,
-		start = type(start) == 'number' and start or error('Argument #1 is not a number', 2),
-		target = type(target) == 'number' and target or error('Argument #2 is not a number', 2),
+		start = Filter.IS_NUMBER(start) and start or error('Argument #1 is not a number', 2),
+		target = Filter.IS_NUMBER(target) and target or error('Argument #2 is not a number', 2),
 		progress = 0,
-		limit = type(steps) == 'number' and math.floor(steps) or error('Argument #3 is not a number', 2)
+		limit = Filter.IS_WHOLE(steps) and steps or error('Argument #3 is not an integer', 2)
 	}, self)
 	newInst:increment()
 	return newInst
