@@ -2,7 +2,7 @@
     "disambiguator": "library_extbase",
     "name": "extbase",
     "author": "syyrion",
-    "version": 1102,
+    "version": 1103,
     "priority": -103,
     "dependencies":
 	[
