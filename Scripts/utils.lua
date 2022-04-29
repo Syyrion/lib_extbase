@@ -373,6 +373,37 @@ function Discrete:freeze()
 	self.val = self:get()
 end
 
+Color = {}
+Color.__index = Color
+
+function Color:new(r, g, b, a, def)
+	local newInst = setmetatable({}, self)
+	newInst.__index = newInst
+	newInst:set(r, g, b, a)
+	newInst:define(def)
+	return newInst
+end
+
+function Color:set(r, g, b, a)
+	self.r = Filter.NUMBER(r) and r or nil
+	self.g = Filter.NUMBER(g) and g or nil
+	self.b = Filter.NUMBER(b) and b or nil
+	self.a = Filter.NUMBER(a) and a or nil
+end
+
+Color.get = s_getMainColor
+
+function Color:define(fn) self.get = type(fn) == 'function' and fn or nil end
+
+function Color:rawget() return rawget(self, 'r'), rawget(self, 'g'), rawget(self, 'b'), rawget(self, 'a') end
+
+function Color:freeze()
+	self.r, self.g, self.b, self.a = nil, nil, nil, nil
+	self.r, self.g, self.b, self.a = self:get()
+end
+
+
+
 Incrementer = {value = 0}
 Incrementer.__index = Incrementer
 
