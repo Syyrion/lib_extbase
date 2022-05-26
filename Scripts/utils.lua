@@ -297,15 +297,15 @@ end
 
 -- Returns the amount of time in frames/ticks/seconds for the player make one full revolution adjusted for the player speed multiplier.
 function getTicksPerPlayerRotation()
-	return TICKS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult()
+	return TICKS_PER_PLAYER_ROTATION / l_getPlayerSpeedMult()
 end
 
 function getFramesPerPlayerRotation()
-	return FRAMES_PER_PLAYER_ROTATION * l_getPlayerSpeedMult()
+	return FRAMES_PER_PLAYER_ROTATION / l_getPlayerSpeedMult()
 end
 
 function getSecondsPerPlayerRotation()
-	return SECONDS_PER_PLAYER_ROTATION * l_getPlayerSpeedMult()
+	return SECONDS_PER_PLAYER_ROTATION / l_getPlayerSpeedMult()
 end
 
 -- Returns the amount of time in frames/ticks/seconds for the player travel across one side.
