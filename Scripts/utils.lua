@@ -94,7 +94,7 @@ Filter.NEGATIVE = function (val) return Filter.NUMBER(val) and val < 0 end
 Filter.NON_POSITIVE = function (val) return Filter.NUMBER(val) and val <= 0 end
 Filter.NON_ZERO = function (val) return Filter.NUMBER(val) and val ~= 0 end
 
-Filter.INTEGER = function (val) return Filter.NUMBER(val) and val % 1 == 0 end
+Filter.INTEGER = function (val) return Filter.NUMBER(val) and math.floor(val) == val end
 Filter.NON_ZERO_INTEGER = function (val) return Filter.INTEGER(val) and val ~= 0 end
 Filter.WHOLE = function (val) return Filter.INTEGER(val) and val >= 0 end
 Filter.NATURAL = function (val) return Filter.INTEGER(val) and val > 0 end
@@ -345,6 +345,7 @@ end
 	* CLASSES
 ]]
 
+-- ! Discrete is depreciated !
 Discrete = {sieve = __FALSE}
 Discrete.__index = Discrete
 
@@ -372,8 +373,56 @@ function Discrete:freeze()
 	self.val = nil
 	self.val = self:get()
 end
+-- ! Discrete is depreciated !
 
-Color = {}
+
+
+local CascadeChain = {sieve = __FALSE}
+CascadeChain.__index = CascadeChain
+
+function CascadeChain:new(init, def)
+	local newInst = setmetatable({}, self)
+	newInst.__index = newInst
+	newInst:set(init)
+	newInst:define(def)
+	return newInst
+end
+-- Sets a value. If verification fails, the value is removed.
+function CascadeChain:set(val) self.val = self.sieve(val) and val or nil end
+-- Gets a value.
+function CascadeChain:get() return self.val end
+-- Modifies the behavior of the get function.
+function CascadeChain:define(fn) self.get = type(fn) == 'function' and fn or nil end
+-- Gets a value without searching for a default value.
+function CascadeChain:rawget() return rawget(self, 'val') end
+-- Sets a value to its default.
+function CascadeChain:freeze()
+	self.val = nil
+	self.val = self:get()
+end
+
+Cascade = {}
+
+-- Creates the root of a new cascade chain.
+function Cascade.new(filter, init, def)
+	local newInst = setmetatable({
+		sieve = type(filter) == 'function' and filter or errorf(2, "NewCascade", "A valid filter must be specified.")
+	}, CascadeChain)
+	newInst.__index = newInst
+	newInst:set(init)
+	newInst:define(def)
+	return newInst
+end
+
+
+
+
+Color = {
+	r = 0,
+	g = 0,
+	b = 0,
+	a = 255
+}
 Color.__index = Color
 
 function Color:new(r, g, b, a, def)
@@ -391,7 +440,7 @@ function Color:set(r, g, b, a)
 	self.a = Filter.NUMBER(a) and a or nil
 end
 
-Color.get = s_getMainColor
+function Color:get() return self.r, self.g, self.b, self.a end
 
 function Color:define(fn) self.get = type(fn) == 'function' and fn or nil end
 
