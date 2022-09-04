@@ -413,12 +413,7 @@ end
 
 
 
-Channel = {
-	r = 0,
-	g = 0,
-	b = 0,
-	a = 255
-}
+Channel = {}
 Channel.__index = Channel
 
 function Channel:new(r, g, b, a, def)
@@ -444,15 +439,14 @@ function Channel:setalpha(a)
 end
 
 function Channel:set(r, g, b, a)
-	self:setColor(r, g, b)
-	self:setAlpha(a)
+	self:setcolor(r, g, b)
+	self:setalpha(a)
 end
 
-function Channel:getcolor() return self.r, self.g, self.b end
-
-function Channel:getalpha() return self.a end
-
-function Channel:get() return self.r, self.g, self.b, self.a end
+function Channel:get()
+	local r, g, b, a = s_getMainColor()
+	return self.r or r, self.g or g, self.b or b, self.a or a
+end
 
 function Channel:define(fn) self.get = type(fn) == 'function' and fn or nil end
 
