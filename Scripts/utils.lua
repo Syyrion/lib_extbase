@@ -151,6 +151,10 @@ function rotate2DPointAroundOrigin(R, x, y)
 	return x * cos - y * sin, x * sin + y * cos
 end
 
+function polarToCartesian(r, a)
+	return r * math.cos(a), r * math.sin(a)
+end
+
 -- Sets hue to a specific value by setting its min an max to the same value
 function forceSetHue(h)
 	s_setHueMin(h)
@@ -172,13 +176,6 @@ end
 -- ! Depreciated. Use the function Filter.SIDE_COUNT
 function verifyShape(shape)
 	return type(shape) == 'number' and math.floor(math.max(shape, 3)) or l_getSides()
-end
-
-local __fromHSV = fromHSV
-
--- fromHSV with type checking
-function fromHSV(h, s, v)
-	return __fromHSV(type(h) == 'number' and h or 0, type(s) == 'number' and clamp(s, 0, 1) or 1, type(v) == 'number' and clamp(v, 0, 1) or 1)
 end
 
 
@@ -416,16 +413,15 @@ end
 
 
 
-
-Color = {
+Channel = {
 	r = 0,
 	g = 0,
 	b = 0,
 	a = 255
 }
-Color.__index = Color
+Channel.__index = Channel
 
-function Color:new(r, g, b, a, def)
+function Channel:new(r, g, b, a, def)
 	local newInst = setmetatable({}, self)
 	newInst.__index = newInst
 	newInst:set(r, g, b, a)
@@ -433,20 +429,36 @@ function Color:new(r, g, b, a, def)
 	return newInst
 end
 
-function Color:set(r, g, b, a)
+function Channel:setcolor(r, g, b)
 	self.r = Filter.NUMBER(r) and r or nil
 	self.g = Filter.NUMBER(g) and g or nil
 	self.b = Filter.NUMBER(b) and b or nil
+end
+
+function Channel:sethsv(h, s, v)
+	self.r, self.g, self.b = fromHSV(h, s, v)
+end
+
+function Channel:setalpha(a)
 	self.a = Filter.NUMBER(a) and a or nil
 end
 
-function Color:get() return self.r, self.g, self.b, self.a end
+function Channel:set(r, g, b, a)
+	self:setColor(r, g, b)
+	self:setAlpha(a)
+end
 
-function Color:define(fn) self.get = type(fn) == 'function' and fn or nil end
+function Channel:getcolor() return self.r, self.g, self.b end
 
-function Color:rawget() return rawget(self, 'r'), rawget(self, 'g'), rawget(self, 'b'), rawget(self, 'a') end
+function Channel:getalpha() return self.a end
 
-function Color:freeze()
+function Channel:get() return self.r, self.g, self.b, self.a end
+
+function Channel:define(fn) self.get = type(fn) == 'function' and fn or nil end
+
+function Channel:rawget() return rawget(self, 'r'), rawget(self, 'g'), rawget(self, 'b'), rawget(self, 'a') end
+
+function Channel:freeze()
 	self.r, self.g, self.b, self.a = nil, nil, nil, nil
 	self.r, self.g, self.b, self.a = self:get()
 end
