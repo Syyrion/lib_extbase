@@ -5,12 +5,12 @@
     "version": 1104,
     "priority": -103,
     "dependencies":
-	[
-		{
-			"disambiguator": "ohvrvanilla",
-			"name": "base",
-			"author": "vittorio romeo",
-			"min_version": 1
-		}
+    [
+        {
+            "disambiguator": "ohvrvanilla",
+            "name": "base",
+            "author": "vittorio romeo",
+            "min_version": 1
+        }
     ]
 }
