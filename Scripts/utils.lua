@@ -385,7 +385,13 @@ function CascadeChain:new(init, def)
     return newInst
 end
 -- Sets a value. If verification fails, the value is removed.
-function CascadeChain:set(val) self.val = self.sieve(val) and val or nil end
+function CascadeChain:set(val)
+    if self.sieve(val) then
+        self.val = val
+        return val
+    end
+    self.val = nil
+end
 -- Gets a value.
 function CascadeChain:get() return self.val end
 -- Modifies the behavior of the get function.
