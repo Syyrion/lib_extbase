@@ -474,21 +474,22 @@ function Incrementer:new(start, target, steps)
         start = Filter.NUMBER(start) and start or error('Argument #1 is not a number', 2),
         target = Filter.NUMBER(target) and target or error('Argument #2 is not a number', 2),
         progress = 0,
-        limit = Filter.WHOLE(steps) and steps or error('Argument #3 is not an integer', 2)
+        limit = Filter.WHOLE(steps) and steps or error('Argument #3 is not a whole number', 2)
     }, self)
-    newInst:increment()
+    newInst.value = newInst.start
     return newInst
 end
 
 function Incrementer:restart()
     self.progress = 0
-    self:increment()
+    self.value = self.start
+    return self.value
 end
 
 function Incrementer:increment()
-    if self.progress > self.limit then return self.value end
-    self.value = mapValue(self.progress, 0, self.limit, self.start, self.target)
+    if self.progress == self.limit then return self.value end
     self.progress = self.progress + 1
+    self.value = mapValue(self.progress, 0, self.limit, self.start, self.target)
     return self.value
 end
 
