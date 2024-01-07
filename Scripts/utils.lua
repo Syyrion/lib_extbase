@@ -403,6 +403,10 @@ function CascadeChain:freeze()
     self.val = nil
     self.val = self:get()
 end
+-- Sets a value to its default only if it hasn't already been set 
+function CascadeChain:soft_freeze()
+    self.val = self:get()
+end
 
 Cascade = {}
 
@@ -460,6 +464,10 @@ function Channel:rawget() return rawget(self, 'r'), rawget(self, 'g'), rawget(se
 
 function Channel:freeze()
     self.r, self.g, self.b, self.a = nil, nil, nil, nil
+    self.r, self.g, self.b, self.a = self:get()
+end
+
+function Channel:soft_freeze()
     self.r, self.g, self.b, self.a = self:get()
 end
 
